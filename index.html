@@ -122,6 +122,141 @@
         }
 
         gameLoop();
+    </script><!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Pastel Pong - AI Edition</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            /* Sfondo color glicine pastello */
+            background-color: #f0e6ff; 
+            color: #5d5d5d;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            /* Bordo bianco latte e ombra morbida */
+            border: 8px solid #ffffff;
+            background-color: #fffaf0; /* Crema chiarissimo */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="pongCanvas" width="800" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById("pongCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Colori Pastello
+        const colorPaddle = "#ffb7b2"; // Rosa pastello
+        const colorBall = "#b2e2f2";   // Azzurro pastello
+        const colorNet = "#e2f0cb";    // Verde menta pastello
+
+        const paddleWidth = 12, paddleHeight = 85;
+        let leftPaddleY = (canvas.height - paddleHeight) / 2;
+        let rightPaddleY = (canvas.height - paddleHeight) / 2;
+        const paddleSpeed = 6;
+
+        let ballX = canvas.width / 2, ballY = canvas.height / 2;
+        let ballSpeedX = 5, ballSpeedY = 5;
+        const ballSize = 10;
+
+        // Controlli per il giocatore (Sinistra)
+        let wPressed = false, sPressed = false;
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "w" || e.key === "W") wPressed = true;
+            if (e.key === "s" || e.key === "S") sPressed = true;
+        });
+
+        document.addEventListener("keyup", (e) => {
+            if (e.key === "w" || e.key === "W") wPressed = false;
+            if (e.key === "s" || e.key === "S") sPressed = false;
+        });
+
+        function update() {
+            // Movimento Giocatore (Sinistra)
+            if (wPressed && leftPaddleY > 0) leftPaddleY -= paddleSpeed;
+            if (sPressed && leftPaddleY < canvas.height - paddleHeight) leftPaddleY += paddleSpeed;
+
+            // --- LOGICA IA (Destra) ---
+            // La racchetta destra calcola il centro della sua altezza
+            let rightPaddleCenter = rightPaddleY + (paddleHeight / 2);
+            // Se la pallina è più in basso del centro della racchetta, scendi. Altrimenti sali.
+            // Aggiungiamo un piccolo margine (10) per evitare che la racchetta "tremi"
+            if (rightPaddleCenter < ballY - 10) {
+                rightPaddleY += paddleSpeed * 0.75; // 0.75 la rende un po' più lenta e battibile
+            } else if (rightPaddleCenter > ballY + 10) {
+                rightPaddleY -= paddleSpeed * 0.75;
+            }
+
+            // Movimento pallina
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Rimbalzo pareti
+            if (ballY <= 0 || ballY >= canvas.height) ballSpeedY = -ballSpeedY;
+
+            // Collisioni
+            if (ballX <= paddleWidth && ballY > leftPaddleY && ballY < leftPaddleY + paddleHeight) {
+                ballSpeedX = Math.abs(ballSpeedX); 
+            }
+            if (ballX >= canvas.width - paddleWidth && ballY > rightPaddleY && ballY < rightPaddleY + paddleHeight) {
+                ballSpeedX = -Math.abs(ballSpeedX);
+            }
+
+            // Reset
+            if (ballX < 0 || ballX > canvas.width) {
+                ballX = canvas.width / 2;
+                ballY = canvas.height / 2;
+                ballSpeedX = -ballSpeedX;
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Linea centrale (Verde menta)
+            ctx.setLineDash([15, 10]);
+            ctx.strokeStyle = colorNet;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+
+            // Racchette (Rosa pastello)
+            ctx.fillStyle = colorPaddle;
+            ctx.beginPath(); // Arrotondiamo un po' le racchette
+            ctx.roundRect(0, leftPaddleY, paddleWidth, paddleHeight, 5);
+            ctx.roundRect(canvas.width - paddleWidth, rightPaddleY, paddleWidth, paddleHeight, 5);
+            ctx.fill();
+
+            // Pallina (Azzurro pastello)
+            ctx.fillStyle = colorBall;
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
     </script>
+</body>
+</html>
 </body>
 </html>
