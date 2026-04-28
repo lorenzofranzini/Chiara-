@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Il mio Gioco di Pong</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #2c3e50;
+            color: white;
+            font-family: sans-serif;
+        }
+        canvas {
+            border: 5px solid #ecf0f1;
+            background-color: #000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="pongCanvas" width="800" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById("pongCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Parametri della racchetta
+        const paddleWidth = 10, paddleHeight = 80;
+        let leftPaddleY = (canvas.height - paddleHeight) / 2;
+        let rightPaddleY = (canvas.height - paddleHeight) / 2;
+        const paddleSpeed = 6;
+
+        // Parametri della pallina
+        let ballX = canvas.width / 2, ballY = canvas.height / 2;
+        let ballSpeedX = 4, ballSpeedY = 4;
+        const ballSize = 8;
+
+        // Gestione tastiera
+        let wPressed = false, sPressed = false;
+        let upPressed = false, downPressed = false;
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "w") wPressed = true;
+            if (e.key === "s") sPressed = true;
+            if (e.key === "ArrowUp") upPressed = true;
+            if (e.key === "ArrowDown") downPressed = true;
+        });
+
+        document.addEventListener("keyup", (e) => {
+            if (e.key === "w") wPressed = false;
+            if (e.key === "s") sPressed = false;
+            if (e.key === "ArrowUp") upPressed = false;
+            if (e.key === "ArrowDown") downPressed = false;
+        });
+
+        function update() {
+            // Movimento racchetta sinistra (W/S)
+            if (wPressed && leftPaddleY > 0) leftPaddleY -= paddleSpeed;
+            if (sPressed && leftPaddleY < canvas.height - paddleHeight) leftPaddleY += paddleSpeed;
+
+            // Movimento racchetta destra (Frecce)
+            if (upPressed && rightPaddleY > 0) rightPaddleY -= paddleSpeed;
+            if (downPressed && rightPaddleY < canvas.height - paddleHeight) rightPaddleY += paddleSpeed;
+
+            // Movimento pallina
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Rimbalzo pareti sopra e sotto
+            if (ballY <= 0 || ballY >= canvas.height) ballSpeedY = -ballSpeedY;
+
+            // Collisione racchetta sinistra
+            if (ballX <= paddleWidth && ballY > leftPaddleY && ballY < leftPaddleY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
+
+            // Collisione racchetta destra
+            if (ballX >= canvas.width - paddleWidth && ballY > rightPaddleY && ballY < rightPaddleY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
+
+            // Reset se esce dai bordi (Punto segnato)
+            if (ballX < 0 || ballX > canvas.width) {
+                ballX = canvas.width / 2;
+                ballY = canvas.height / 2;
+                ballSpeedX = -ballSpeedX;
+            }
+        }
+
+        function draw() {
+            // Pulizia schermo
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Disegno linea centrale
+            ctx.setLineDash([10, 10]);
+            ctx.strokeStyle = "white";
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+
+            // Disegno racchette
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, leftPaddleY, paddleWidth, paddleHeight);
+            ctx.fillRect(canvas.width - paddleWidth, rightPaddleY, paddleWidth, paddleHeight);
+
+            // Disegno pallina
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
